@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
         // Try external API first
         try {
-            const response = await fetch("http://176.88.248.139/stations", {
+            const response = await fetch("http://176.88.248.139/stations/", {
                 method: "GET",
                 headers: {
                     "Authorization": `Bearer ${token}`,

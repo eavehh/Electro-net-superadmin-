@@ -39,7 +39,7 @@ export default function TransactionsPage() {
         return
       }
 
-      const response = await fetch("http://176.88.248.139/transactions", {
+      const response = await fetch("http://176.88.248.139/transactions/", {
         headers: {
           "Authorization": `Bearer ${token}`,
         },
@@ -58,7 +58,8 @@ export default function TransactionsPage() {
       }
 
       const data = await response.json()
-      setTransactions(data.transactions || data)
+      // Backend returns { success: true, data: [...] }
+      setTransactions(data.success ? data.data : [])
       setStats(data.stats || null)
       setError(null)
     } catch (err) {
@@ -68,7 +69,7 @@ export default function TransactionsPage() {
     }
   }
 
-  const filteredTransactions = transactions.filter((txn) =>
+  const filteredTransactions = (transactions || []).filter((txn) =>
     txn.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     txn.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
     txn.station.toLowerCase().includes(searchTerm.toLowerCase())
@@ -177,10 +178,10 @@ export default function TransactionsPage() {
                   <td className="py-3 px-4 text-sm">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium ${txn.status === "completed"
-                          ? "bg-accent/20 text-accent"
-                          : txn.status === "failed"
-                            ? "bg-destructive/20 text-destructive"
-                            : "bg-yellow-500/20 text-yellow-600"
+                        ? "bg-accent/20 text-accent"
+                        : txn.status === "failed"
+                          ? "bg-destructive/20 text-destructive"
+                          : "bg-yellow-500/20 text-yellow-600"
                         }`}
                     >
                       {txn.status === "completed" ? "Завершено" : txn.status === "failed" ? "Ошибка" : "В процессе"}

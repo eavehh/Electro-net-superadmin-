@@ -58,13 +58,13 @@ export default function DashboardPage() {
     {
       icon: <Users className="w-6 h-6 text-primary" />,
       label: "Total Users",
-      value: transactionStats ? Math.floor(transactionStats.totalTransactions / 10).toString() : "0",
+      value: transactionStats ? Math.floor(transactionStats.totalTransactions / 10 || 0).toString() : "0",
       change: "+5%"
     },
     {
       icon: <DollarSign className="w-6 h-6 text-primary" />,
       label: "Revenue",
-      value: transactionStats ? `$${transactionStats.totalAmount.toFixed(0)}` : "$0",
+      value: transactionStats && transactionStats.totalRevenue ? `$${transactionStats.totalRevenue.toFixed(0)}` : "$0",
       change: "+23%"
     },
     {
@@ -259,12 +259,12 @@ export default function DashboardPage() {
                   <td className="py-3 px-4 text-foreground text-sm font-medium">${transaction.amount.toFixed(2)}</td>
                   <td className="py-3 px-4 text-sm">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${transaction.status === 'completed'
-                        ? 'bg-green-500/20 text-green-600'
-                        : transaction.status === 'active'
-                          ? 'bg-blue-500/20 text-blue-600'
-                          : transaction.status === 'failed'
-                            ? 'bg-red-500/20 text-red-600'
-                            : 'bg-yellow-500/20 text-yellow-600'
+                      ? 'bg-green-500/20 text-green-600'
+                      : transaction.status === 'active'
+                        ? 'bg-blue-500/20 text-blue-600'
+                        : transaction.status === 'failed'
+                          ? 'bg-red-500/20 text-red-600'
+                          : 'bg-yellow-500/20 text-yellow-600'
                       }`}>
                       {transaction.status === 'completed' ? 'Завершено' :
                         transaction.status === 'active' ? 'Активно' :

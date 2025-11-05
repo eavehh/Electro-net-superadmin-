@@ -1,12 +1,13 @@
 "use client"
 
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
 import LoginForm from "@/components/auth/login-form"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Wifi, WifiOff } from "lucide-react"
 import { useWebSocket } from "@/hooks/use-websocket"
+import { useAuth } from "@/contexts/AuthContext"
 
 function WebSocketTest() {
   const { isConnected, reconnect } = useWebSocket("ws://176.88.248.139/ws/")
@@ -33,18 +34,15 @@ function WebSocketTest() {
 
 export default function AuthPage() {
   const router = useRouter()
-  const [isLoading, setIsLoading] = useState(true)
+  const { isAuthenticated, isLoading } = useAuth()
 
   useEffect(() => {
-    const token = localStorage.getItem("adminToken")
-    if (token) {
+    if (!isLoading && isAuthenticated) {
       router.replace("/dashboard")
-    } else {
-      setIsLoading(false)
     }
-  }, [router])
+  }, [isAuthenticated, isLoading, router])
 
-  if (isLoading) {
+  if (isLoading || isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="animate-spin rounded-full h-12 w-12 border-2 border-primary border-t-transparent"></div>

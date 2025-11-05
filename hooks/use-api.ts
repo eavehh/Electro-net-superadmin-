@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 
+// Backend API URL
+const API_BASE_URL = 'http://176.88.248.139'
+
 interface Station {
     id: string
     chargePointId: string
@@ -30,10 +33,12 @@ interface Transaction {
 
 interface TransactionStats {
     totalTransactions: number
-    totalAmount: number
     completedTransactions: number
-    failedTransactions: number
-    averageTransactionAmount: number
+    totalEnergy: number
+    totalRevenue: number
+    averageTransactionCost: number
+    averageEnergy: number
+    averageDuration: number
 }
 
 export function useStations() {
@@ -51,7 +56,7 @@ export function useStations() {
                     return
                 }
 
-                const response = await fetch('/api/stations', {
+                const response = await fetch(`${API_BASE_URL}/stations/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     },
@@ -62,7 +67,8 @@ export function useStations() {
                 }
 
                 const data = await response.json()
-                setStations(data)
+                // Backend returns { success: true, data: [...] }
+                setStations(data.success ? data.data : data)
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to fetch stations')
             } finally {
@@ -91,7 +97,7 @@ export function useTransactions(limit = 50) {
                     return
                 }
 
-                const response = await fetch(`/api/transactions?limit=${limit}`, {
+                const response = await fetch(`${API_BASE_URL}/transactions/?limit=${limit}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     },
@@ -102,7 +108,8 @@ export function useTransactions(limit = 50) {
                 }
 
                 const data = await response.json()
-                setTransactions(data)
+                // Backend returns { success: true, data: [...] }
+                setTransactions(data.success ? data.data : data)
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to fetch transactions')
             } finally {
@@ -131,7 +138,7 @@ export function useTransactionStats() {
                     return
                 }
 
-                const response = await fetch('/api/transactions/stats/summary', {
+                const response = await fetch(`${API_BASE_URL}/transactions/stats/summary`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     },
@@ -142,7 +149,8 @@ export function useTransactionStats() {
                 }
 
                 const data = await response.json()
-                setStats(data)
+                // Backend returns { success: true, data: {...} }
+                setStats(data.success ? data.data : data)
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to fetch transaction stats')
             } finally {

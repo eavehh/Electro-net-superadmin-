@@ -3,14 +3,14 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Lock, Mail } from "lucide-react"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function LoginForm() {
-  const router = useRouter()
+  const { login } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -22,53 +22,9 @@ export default function LoginForm() {
     setError("")
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      })
-
-      if (!response.ok) {
-        const contentType = response.headers.get("content-type")
-        let errorMessage = "Invalid credentials"
-
-        if (contentType?.includes("application/json")) {
-          try {
-            const errorData = await response.json()
-            errorMessage = errorData.error || errorMessage
-          } catch {
-            errorMessage = "Server error"
-          }
-        } else {
-          errorMessage = `Server error: ${response.status}`
-        }
-
-        throw new Error(errorMessage)
-      }
-
-      const data = await response.json()
-
-      // Check for new JWT token structure
-      if (data.success && data.token) {
-        localStorage.setItem("adminToken", data.token)
-        if (data.refreshToken) {
-          localStorage.setItem("refreshToken", data.refreshToken)
-        }
-        localStorage.setItem("user", JSON.stringify(data.user))
-        router.push("/dashboard")
-      } else if (data.token && data.user) {
-        // Legacy format support
-        localStorage.setItem("adminToken", data.token)
-        if (data.refreshToken) {
-          localStorage.setItem("refreshToken", data.refreshToken)
-        }
-        localStorage.setItem("user", JSON.stringify(data.user))
-        router.push("/dashboard")
-      } else {
-        throw new Error("Invalid response from server")
-      }
+      await login(email, password)
     } catch (err) {
-      console.error("[v0] Login error:", err)
+      console.error("Login error:", err)
       setError(err instanceof Error ? err.message : "Login failed")
     } finally {
       setIsLoading(false)
@@ -137,13 +93,10 @@ export default function LoginForm() {
           </form>
 
           <div className="mt-6 pt-6 border-t border-border">
-            <p className="text-xs text-muted-foreground text-center mb-4">Demo credentials:</p>
+            <p className="text-xs text-muted-foreground text-center mb-4">Реальные учетные данные:</p>
             <div className="space-y-2 mb-4">
               <div className="text-xs text-muted-foreground text-center">
-                <strong>Admin:</strong> admin@csms.com / admin123
-              </div>
-              <div className="text-xs text-muted-foreground text-center">
-                <strong>User:</strong> testuser@csms.com / testuser123
+                <strong>Super Admin:</strong> superadmin@csms.com / SuperAdmin123!
               </div>
             </div>
             <div className="flex gap-2">
@@ -152,8 +105,8 @@ export default function LoginForm() {
                 variant="outline"
                 size="sm"
                 onClick={async () => {
-                  setEmail("admin@csms.com")
-                  setPassword("admin123")
+                  setEmail("superadmin@csms.com")
+                  setPassword("SuperAdmin123!")
                   setTimeout(() => {
                     const form = document.querySelector('form') as HTMLFormElement
                     form?.requestSubmit()
@@ -161,23 +114,7 @@ export default function LoginForm() {
                 }}
                 className="flex-1 text-xs"
               >
-                Login as Admin
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  setEmail("testuser@csms.com")
-                  setPassword("testuser123")
-                  setTimeout(() => {
-                    const form = document.querySelector('form') as HTMLFormElement
-                    form?.requestSubmit()
-                  }, 100)
-                }}
-                className="flex-1 text-xs"
-              >
-                Login as User
+                Login as Super Admin
               </Button>
             </div>
           </div>

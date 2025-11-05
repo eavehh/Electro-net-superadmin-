@@ -6,15 +6,35 @@ import { Input } from "@/components/ui/input"
 import { Plus, Edit, Search, Eye, MapPin, Play, Square, RotateCcw, Unlock, Upload, Activity, Trash2 } from "lucide-react"
 import { useState, useEffect } from "react"
 
+interface Connector {
+  connectorId: number
+  type: string
+  format: string
+  powerType: string
+  maxPower: number
+  _id?: string
+}
+
 interface Station {
+  _id: string
+  stationId: string
+  displayName: string
+  siteId: string
+  stationModel: string
+  vendor: string
+  connectors: Connector[]
+  isPublic: boolean
+  requiresAuthentication: boolean
+  maintenanceMode: boolean
+  createdAt: string
+  updatedAt: string
+  // Normalized fields
   id: string
   name: string
   location: string
-  operatorId: string
   status: "Available" | "Occupied" | "Unavailable" | "Faulted"
   power: number
-  connectors: number
-  siteId: string
+  operatorId?: string
 }
 
 export default function StationsPage() {
@@ -32,7 +52,7 @@ export default function StationsPage() {
         return
       }
 
-      const response = await fetch("http://176.88.248.139/stations", {
+      const response = await fetch("http://176.88.248.139/stations/", {
         headers: {
           "Authorization": `Bearer ${token}`,
         },
@@ -51,7 +71,17 @@ export default function StationsPage() {
       }
 
       const data = await response.json()
-      setStations(data)
+      // Backend returns { success: true, data: [...] }
+      // Normalize station data
+      const normalizedStations = (data.success ? data.data : []).map((station: any) => ({
+        ...station,
+        id: station.stationId || station._id,
+        name: station.displayName || station.name,
+        location: station.siteId || station.location || 'N/A',
+        status: station.maintenanceMode ? 'Unavailable' : (station.status || 'Available'),
+        power: station.connectors?.[0]?.maxPower || 0
+      }))
+      setStations(normalizedStations)
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load stations")
@@ -249,15 +279,15 @@ export default function StationsPage() {
     fetchStations()
   }, [])
 
-  const filteredStations = stations.filter(station =>
+  const filteredStations = (stations || []).filter(station =>
     station.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     station.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     station.id.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const onlineStations = stations.filter(s => s.status === "Available").length
-  const maintenanceStations = stations.filter(s => s.status === "Unavailable").length
-  const offlineStations = stations.filter(s => s.status === "Faulted").length
+  const onlineStations = (stations || []).filter(s => s.status === "Available").length
+  const maintenanceStations = (stations || []).filter(s => s.status === "Unavailable").length
+  const offlineStations = (stations || []).filter(s => s.status === "Faulted").length
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -368,9 +398,9 @@ export default function StationsPage() {
                     <MapPin className="w-4 h-4 text-muted-foreground" />
                     {station.location}
                   </td>
-                  <td className="py-3 px-4 text-muted-foreground text-sm">{station.operatorId}</td>
+                  <td className="py-3 px-4 text-muted-foreground text-sm">{station.operatorId || 'N/A'}</td>
                   <td className="py-3 px-4 text-foreground text-sm">{station.power}kW</td>
-                  <td className="py-3 px-4 text-foreground text-sm">{station.connectors}</td>
+                  <td className="py-3 px-4 text-foreground text-sm">{station.connectors.length}</td>
                   <td className="py-3 px-4 text-sm">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 w-fit ${getStatusColor(station.status)}`}
